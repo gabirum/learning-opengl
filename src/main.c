@@ -51,7 +51,7 @@ int main(int argc, char const *argv[])
   }
   glfwSwapInterval(1);
 
-  shader_t *shader = shader_new("C:\\projects\\render\\shader\\shader.vert", "C:\\projects\\render\\shader\\shader.frag");
+  shader_t *shader = shader_new("shader\\shader.vert", "shader\\shader.frag");
   if (shader == NULL)
   {
     retval = -1;
