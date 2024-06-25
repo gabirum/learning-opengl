@@ -87,8 +87,6 @@ static bool compile_program(unsigned int vertex, unsigned int frag, unsigned int
 
 shader_t *shader_new(char const *vertex_path, char const *frag_path)
 {
-  bool free_shader = false;
-
   shader_t *shader = malloc(sizeof(shader_t));
   if (shader == NULL)
   {
