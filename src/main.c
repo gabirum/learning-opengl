@@ -55,7 +55,7 @@ int main(int argc, char const *argv[])
   }
   glfwSwapInterval(1000 / 75);
 
-  shader_t *shader = shader_new("shader/shader.vert", "shader/shader.frag");
+  shader_t *shader = shader_new("resources/shaders/shader.vert", "resources/shaders/shader.frag");
   if (shader == NULL)
   {
     retval = EXIT_FAILURE;
