@@ -109,7 +109,7 @@ int main(int argc, char const *argv[])
 
   while (!glfwWindowShouldClose(window))
   {
-    glClearColor(.1f, .1f, .1f, 1.f);
+    glClearColor(1.f, 1.f, 1.f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glBindTexture(GL_TEXTURE_2D, texture);

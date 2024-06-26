@@ -3,41 +3,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "fs.h"
+
 #define LOG_ERR(format, ...) fprintf(stderr, "err in file %s:%d: " format "\n", __FILE__, __LINE__, ##__VA_ARGS__)
-
-static char *get_file_content(char const *filename)
-{
-  FILE *file = fopen(filename, "rb");
-  if (file == NULL)
-  {
-    LOG_ERR("Cannot open file: %s", filename);
-    return NULL;
-  }
-
-  fseek(file, 0, SEEK_END);
-  long file_size = ftell(file);
-  rewind(file);
-
-  char *data = calloc(file_size + 1, 1);
-  if (data == NULL)
-  {
-    LOG_ERR("Allocation failed");
-
-    // data is null, so just return it
-    goto close;
-  }
-
-  fread(data, 1, file_size, file);
-
-close:
-  fclose(file);
-
-  return data;
-}
 
 static bool compile_shader(char const *filename, GLenum shader_type, unsigned int *shader)
 {
-  char *shader_source = get_file_content(filename);
+  char *shader_source = fs_read_all_file(filename);
   if (shader_source == NULL)
     return false;
 
