@@ -8,6 +8,9 @@ target_compile_features(render PRIVATE c_std_17)
 add_library(glad lib/glad/src/gl.c)
 target_include_directories(glad PUBLIC lib/glad/include)
 
+add_library(stb lib/stb/src/stb_image.c)
+target_include_directories(stb PUBLIC lib/stb/include)
+
 include(cmake/CPM.cmake)
 
 CPMAddPackage(
@@ -17,4 +20,4 @@ CPMAddPackage(
   GIT_TAG 3.4
 )
 
-target_link_libraries(render m glfw glad)
+target_link_libraries(render glfw glad stb)

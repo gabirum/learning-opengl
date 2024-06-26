@@ -18,7 +18,7 @@ static char *get_file_content(char const *filename)
   long file_size = ftell(file);
   rewind(file);
 
-  char *data = calloc(file_size, 1);
+  char *data = calloc(file_size + 1, 1);
   if (data == NULL)
   {
     LOG_ERR("Allocation failed");
