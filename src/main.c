@@ -14,7 +14,7 @@
 static void error_cb(int error, char const *desc);
 static void framebuffer_size_cb(GLFWwindow *window, int width, int height);
 static void key_cb(GLFWwindow *window, int key, int scancode, int action, int mods);
-static bool create_texture(char const *filename, unsigned int *texture);
+static bool create_texture(char const *filename, unsigned int *texture, GLint color_format);
 
 int main(int argc, char const *argv[])
 {
@@ -53,7 +53,7 @@ int main(int argc, char const *argv[])
     retval = EXIT_FAILURE;
     goto destroy;
   }
-  glfwSwapInterval(1000 / 75);
+  glfwSwapInterval(1000 / 140);
 
   shader_t *shader = shader_new("resources/shaders/shader.vert", "resources/shaders/shader.frag");
   if (shader == NULL)
@@ -98,12 +98,24 @@ int main(int argc, char const *argv[])
   glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
   glEnableVertexAttribArray(2);
 
-  unsigned int texture;
-  if (!create_texture("resources/textures/container.jpg", &texture))
+  unsigned int texture1, texture2;
+  if (!create_texture("resources/textures/container.jpg", &texture1, GL_RGB))
   {
     retval = EXIT_FAILURE;
     goto cleanup;
   }
+
+  stbi_set_flip_vertically_on_load(true);
+  if (!create_texture("resources/textures/awesomeface.png", &texture2, GL_RGBA))
+  {
+    retval = EXIT_FAILURE;
+    goto cleanup;
+  }
+  stbi_set_flip_vertically_on_load(false);
+
+  shader_use(shader);
+  shader_set_int(shader, "texture1", 0);
+  shader_set_int(shader, "texture2", 1);
 
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -112,7 +124,10 @@ int main(int argc, char const *argv[])
     glClearColor(1.f, 1.f, 1.f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glBindTexture(GL_TEXTURE_2D, texture);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture1);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, texture2);
 
     shader_use(shader);
     glBindVertexArray(vao);
@@ -122,7 +137,8 @@ int main(int argc, char const *argv[])
     glfwPollEvents();
   }
 
-  glDeleteTextures(1, &texture);
+  glDeleteTextures(1, &texture1);
+  glDeleteTextures(1, &texture2);
 cleanup:
   glDeleteVertexArrays(1, &vao);
   glDeleteBuffers(1, &vbo);
@@ -154,7 +170,7 @@ static void key_cb(GLFWwindow *window, int key, int scancode, int action, int mo
   }
 }
 
-static bool create_texture(char const *filename, unsigned int *texture)
+static bool create_texture(char const *filename, unsigned int *texture, GLint color_format)
 {
   unsigned int new_texture;
   glGenTextures(1, &new_texture);
@@ -173,7 +189,7 @@ static bool create_texture(char const *filename, unsigned int *texture)
     return false;
   }
 
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+  glTexImage2D(GL_TEXTURE_2D, 0, color_format, width, height, 0, color_format, GL_UNSIGNED_BYTE, data);
   glGenerateMipmap(GL_TEXTURE_2D);
   stbi_image_free(data);
 
