@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-char *fs_read_all_file(char const *filename)
+uint8_t *fs_read_all_file(char const *filename)
 {
   FILE *file = fopen(filename, "rb");
   if (file == NULL)
@@ -15,7 +15,7 @@ char *fs_read_all_file(char const *filename)
   long size = ftell(file);
   rewind(file);
 
-  char *data = calloc(size + 1, 1);
+  uint8_t *data = calloc(size + 1, 1);
   if (data == NULL)
   {
     goto close;

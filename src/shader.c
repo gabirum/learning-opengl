@@ -9,7 +9,7 @@
 
 static bool compile_shader(char const *filename, GLenum shader_type, unsigned int *shader)
 {
-  char *shader_source = fs_read_all_file(filename);
+  uint8_t *shader_source = fs_read_all_file(filename);
   if (shader_source == NULL)
     return false;
 
