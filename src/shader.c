@@ -24,7 +24,7 @@ static bool compile_shader(char const *filename, GLenum shader_type, unsigned in
   {
     char log[512];
     glGetShaderInfoLog(new_shader, 512, NULL, log);
-    LOG_ERR("SHADER COMPILATION ERROR (%u): %s\n", shader_type, log);
+    LOG_ERR("SHADER COMPILATION ERROR (%u): %s", shader_type, log);
 
     glDeleteShader(new_shader);
     return false;

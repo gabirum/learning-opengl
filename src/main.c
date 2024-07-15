@@ -8,6 +8,7 @@
 #undef GLFW_INCLUDE_NONE
 
 #include <stb/stb_image.h>
+#include <cglm/cglm.h>
 
 #include "shader.h"
 
@@ -35,7 +36,7 @@ int main(int argc, char const *argv[])
 
   int retval = EXIT_SUCCESS;
 
-  GLFWwindow *window = glfwCreateWindow(800, 600, "Triângulo", NULL, NULL);
+  GLFWwindow *window = glfwCreateWindow(800, 600, "Learning OpenGL", NULL, NULL);
   if (window == NULL)
   {
     fprintf(stderr, "GLFW create window failed\n");
@@ -129,7 +130,13 @@ int main(int argc, char const *argv[])
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texture2);
 
+    mat4 transform = GLM_MAT4_IDENTITY_INIT;
+    glm_translate(transform, (vec3){0.f, 0.f, 1.f});
+    glm_rotate(transform, (float)glfwGetTime(), (vec3){.5f, -.5f, 0.f});
+
     shader_use(shader);
+    shader_set_mat4(shader, "transform", transform);
+
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
