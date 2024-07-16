@@ -189,8 +189,6 @@ int main(int argc, char const *argv[])
     float current_frame = glfwGetTime();
     delta_time = current_frame - last_frame;
     last_frame = current_frame;
-    printf("\e[1;1H\e[2J");
-    printf("frame time: %.3fms\n", delta_time * 1000.f);
 
     glClearColor(.2f, .3f, .3f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
