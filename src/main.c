@@ -74,7 +74,7 @@ static unsigned int const square_indices[] = {
     1, 2, 3  // second triangle
 };
 
-static vec3 const cube_positions[] = {
+static vec3 cube_positions[] = {
     {0.0f, 0.0f, 0.0f},
     {2.0f, 5.0f, -15.0f},
     {-1.5f, -2.2f, -2.5f},
@@ -287,7 +287,7 @@ static void key_cb(GLFWwindow *window, int key, int scancode, int action, int mo
   }
 }
 
-void mouse_cb(GLFWwindow *window, double xpos, double ypos)
+static void mouse_cb(GLFWwindow *window, double xpos, double ypos)
 {
   if (is_first_mouse_enter)
   {
@@ -305,7 +305,7 @@ void mouse_cb(GLFWwindow *window, double xpos, double ypos)
   cam_process_mouse(camera, xoff, yoff);
 }
 
-void scroll_cb(GLFWwindow *window, double xoff, double yoff)
+static void scroll_cb(GLFWwindow *window, double xoff, double yoff)
 {
   cam_process_scroll(camera, yoff);
 }
