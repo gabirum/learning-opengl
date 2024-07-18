@@ -12,14 +12,13 @@
 #include <cglm/cglm.h>
 
 #include "shader.h"
-
-#define CLAMP(v, lo, hi) (v < lo ? lo : (v > hi ? hi : v))
+#include "camera.h"
 
 static void error_cb(int error, char const *desc);
 static void framebuffer_size_cb(GLFWwindow *window, int width, int height);
 static void key_cb(GLFWwindow *window, int key, int scancode, int action, int mods);
-static void mouse_cb(GLFWwindow * window, double xpos, double ypos);
-static void scroll_cb(GLFWwindow * window, double xoff, double yoff);
+static void mouse_cb(GLFWwindow *window, double xpos, double ypos);
+static void scroll_cb(GLFWwindow *window, double xoff, double yoff);
 static bool create_texture(char const *filename, unsigned int *texture, GLint color_format);
 
 static int screen_width = 800;
@@ -27,17 +26,73 @@ static int screen_height = 600;
 static float lastx = 400;
 static float lasty = 300;
 
-static float delta_time = 0.f;
+static float const cube_vertices[] = {
+    -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+    0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
+    0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+    0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+    -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+
+    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+    0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+    0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
+    0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
+    -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
+    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+
+    -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+    -0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+    -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+
+    0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+    0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+    0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+    0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+    0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+    0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+
+    -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+    0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
+    0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+    0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+
+    -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
+    0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+    0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+    0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+    -0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
+    -0.5f, 0.5f, -0.5f, 0.0f, 1.0f};
+
+static unsigned int const square_indices[] = {
+    0, 1, 3, // first triangle
+    1, 2, 3  // second triangle
+};
+
+static vec3 const cube_positions[] = {
+    {0.0f, 0.0f, 0.0f},
+    {2.0f, 5.0f, -15.0f},
+    {-1.5f, -2.2f, -2.5f},
+    {-3.8f, -2.0f, -12.3f},
+    {2.4f, -0.4f, -3.5f},
+    {-1.7f, 3.0f, -7.5f},
+    {1.3f, -2.0f, -2.5f},
+    {1.5f, 2.0f, -2.5f},
+    {1.5f, 0.2f, -1.5f},
+    {-1.3f, 1.0f, -1.5},
+};
+
+static float frame_time = 0.f;
 static float last_frame = 0.f;
 
 static bool is_first_mouse_enter = true;
-static float fov = 45.f;
-static float yaw = -90.f;
-static float pitch = 0.f;
 
-static vec3 camera_pos = {0.f, 0.f, 3.f};
-static vec3 camera_front = {0.f, 0.f, -1.f};
-static vec3 camera_up = {0.f, 1.f, 0.f};
+static camera_t *camera;
 
 int main(int argc, char const *argv[])
 {
@@ -83,59 +138,19 @@ int main(int argc, char const *argv[])
 
   glEnable(GL_DEPTH_TEST);
 
-  shader_t *shader = shader_new("resources/shaders/shader.vert", "resources/shaders/shader.frag");
-  if (shader == NULL)
+  camera = cam_new_defaults();
+  if (camera == NULL)
   {
     retval = EXIT_FAILURE;
     goto destroy;
   }
 
-  float vertices[] = {
-      -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-      0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
-      0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-      0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-      -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-      -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-
-      -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-      0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-      0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-      0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-      -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
-      -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-
-      -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-      -0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-      -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-      -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-
-      0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-      0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-      0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-      0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-      0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-      0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-
-      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-      0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
-      0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-      0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-      -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-
-      -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-      0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-      0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-      0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-      -0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
-      -0.5f, 0.5f, -0.5f, 0.0f, 1.0f};
-  unsigned int indices[] = {
-      0, 1, 3, // first triangle
-      1, 2, 3  // second triangle
-  };
+  shader_t *shader = shader_new("resources/shaders/shader.vert", "resources/shaders/shader.frag");
+  if (shader == NULL)
+  {
+    retval = EXIT_FAILURE;
+    goto destroy_cam;
+  }
 
   unsigned int vbo, vao;
   glGenVertexArrays(1, &vao);
@@ -144,7 +159,7 @@ int main(int argc, char const *argv[])
   glBindVertexArray(vao);
 
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(cube_vertices), cube_vertices, GL_STATIC_DRAW);
 
   // position attribute
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
@@ -158,27 +173,14 @@ int main(int argc, char const *argv[])
   if (!create_texture("resources/textures/container.jpg", &texture1, GL_RGB))
   {
     retval = EXIT_FAILURE;
-    goto cleanup;
+    goto destroy_shader;
   }
 
   if (!create_texture("resources/textures/awesomeface.png", &texture2, GL_RGBA))
   {
     retval = EXIT_FAILURE;
-    goto cleanup;
+    goto delete_texture_1;
   }
-
-  vec3 cube_positions[] = {
-      {0.0f, 0.0f, 0.0f},
-      {2.0f, 5.0f, -15.0f},
-      {-1.5f, -2.2f, -2.5f},
-      {-3.8f, -2.0f, -12.3f},
-      {2.4f, -0.4f, -3.5f},
-      {-1.7f, 3.0f, -7.5f},
-      {1.3f, -2.0f, -2.5f},
-      {1.5f, 2.0f, -2.5f},
-      {1.5f, 0.2f, -1.5f},
-      {-1.3f, 1.0f, -1.5},
-  };
 
   shader_use(shader);
   shader_set_int(shader, "texture1", 0);
@@ -187,7 +189,7 @@ int main(int argc, char const *argv[])
   while (!glfwWindowShouldClose(window))
   {
     float current_frame = glfwGetTime();
-    delta_time = current_frame - last_frame;
+    frame_time = current_frame - last_frame;
     last_frame = current_frame;
 
     glClearColor(.2f, .3f, .3f, 1.f);
@@ -200,14 +202,12 @@ int main(int argc, char const *argv[])
 
     shader_use(shader);
 
-    mat4 projection = GLM_MAT4_IDENTITY_INIT;
-    glm_perspective(glm_rad(fov), ((float)screen_width) / ((float)screen_height), .1f, 100.f, projection);
+    mat4 projection;
+    glm_perspective(glm_rad(cam_get_zoom(camera)), ((float)screen_width) / ((float)screen_height), .1f, 100.f, projection);
     shader_set_mat4(shader, "projection", projection);
 
-    mat4 view = GLM_MAT4_IDENTITY_INIT;
-    vec3 center;
-    glm_vec3_add(camera_pos, camera_front, center);
-    glm_lookat(camera_pos, center, camera_up, view);
+    mat4 view;
+    cam_get_view_matrix(camera, view);
     shader_set_mat4(shader, "view", view);
 
     glBindVertexArray(vao);
@@ -227,12 +227,16 @@ int main(int argc, char const *argv[])
     glfwPollEvents();
   }
 
-  glDeleteTextures(1, &texture1);
   glDeleteTextures(1, &texture2);
-cleanup:
+delete_texture_1:
+  glDeleteTextures(1, &texture1);
+clean_buffers:
   glDeleteVertexArrays(1, &vao);
   glDeleteBuffers(1, &vbo);
+destroy_shader:
   shader_destroy(shader);
+destroy_cam:
+  cam_destroy(camera);
 destroy:
   glfwDestroyWindow(window);
 terminate:
@@ -258,45 +262,35 @@ static void key_cb(GLFWwindow *window, int key, int scancode, int action, int mo
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     glfwSetWindowShouldClose(window, GLFW_TRUE);
 
-  float const camera_speed = 2.5f * delta_time;
-  vec3 scale, result;
   if (key == GLFW_KEY_W && (action & (GLFW_PRESS | GLFW_REPEAT)))
   {
-    glm_vec3_scale(camera_front, camera_speed, scale);
-    glm_vec3_add(camera_pos, scale, result);
-    memcpy(camera_pos, result, sizeof(result));
+    cam_process_key(camera, CAMERA_FORWARD, frame_time);
+    return;
   }
 
   if (key == GLFW_KEY_S && (action & (GLFW_PRESS | GLFW_REPEAT)))
   {
-    glm_vec3_scale(camera_front, camera_speed, scale);
-    glm_vec3_sub(camera_pos, scale, result);
-    memcpy(camera_pos, result, sizeof(result));
+    cam_process_key(camera, CAMERA_BACKWARD, frame_time);
+    return;
   }
 
-  vec3 cross;
   if (key == GLFW_KEY_A && (action & (GLFW_PRESS | GLFW_REPEAT)))
   {
-    glm_cross(camera_front, camera_up, cross);
-    glm_normalize(cross);
-    glm_vec3_scale(cross, camera_speed, scale);
-    glm_vec3_sub(camera_pos, scale, result);
-    memcpy(camera_pos, result, sizeof(result));
+    cam_process_key(camera, CAMERA_LEFT, frame_time);
+    return;
   }
 
   if (key == GLFW_KEY_D && (action & (GLFW_PRESS | GLFW_REPEAT)))
   {
-    glm_cross(camera_front, camera_up, cross);
-    glm_normalize(cross);
-    glm_vec3_scale(cross, camera_speed, scale);
-    glm_vec3_add(camera_pos, scale, result);
-    memcpy(camera_pos, result, sizeof(result));
+    cam_process_key(camera, CAMERA_RIGHT, frame_time);
+    return;
   }
 }
 
 void mouse_cb(GLFWwindow *window, double xpos, double ypos)
 {
-  if (is_first_mouse_enter) {
+  if (is_first_mouse_enter)
+  {
     lastx = xpos;
     lasty = ypos;
     is_first_mouse_enter = false;
@@ -304,30 +298,16 @@ void mouse_cb(GLFWwindow *window, double xpos, double ypos)
 
   float xoff = xpos - lastx;
   float yoff = lasty - ypos;
+
   lastx = xpos;
   lasty = ypos;
 
-  float const sensitivity = .1f;
-  xoff *= sensitivity;
-  yoff *= sensitivity;
-
-  yaw += xoff;
-  pitch += yoff;
-
-  pitch = CLAMP(pitch, -89.f, 89.f);
-
-  vec3 direction;
-  direction[0] = cosf(glm_rad(yaw)) * cosf(glm_rad(pitch));
-  direction[1] = sinf(glm_rad(pitch));
-  direction[2] = sinf(glm_rad(yaw)) * cosf(glm_rad(pitch));
-  glm_normalize(direction);
-  memcpy(camera_front, direction, sizeof(direction));
+  cam_process_mouse(camera, xoff, yoff);
 }
 
 void scroll_cb(GLFWwindow *window, double xoff, double yoff)
 {
-  fov -= (float) yoff;
-  fov = CLAMP(fov, 1.f, 70.f);
+  cam_process_scroll(camera, yoff);
 }
 
 static bool create_texture(char const *filename, unsigned int *texture, GLint color_format)
