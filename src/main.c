@@ -144,6 +144,7 @@ int main(int argc, char const *argv[])
     retval = EXIT_FAILURE;
     goto destroy;
   }
+  cam_set_constrain_pitch(camera, true);
 
   shader_t *shader = shader_new("resources/shaders/shader.vert", "resources/shaders/shader.frag");
   if (shader == NULL)
@@ -257,32 +258,45 @@ static void framebuffer_size_cb(GLFWwindow *window, int width, int height)
   glViewport(0, 0, width, height);
 }
 
+static int const KEY_ACTION = GLFW_PRESS | GLFW_REPEAT;
 static void key_cb(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     glfwSetWindowShouldClose(window, GLFW_TRUE);
 
-  if (key == GLFW_KEY_W && (action & (GLFW_PRESS | GLFW_REPEAT)))
+  if (key == GLFW_KEY_W && (action & KEY_ACTION))
   {
     cam_process_key(camera, CAMERA_FORWARD, frame_time);
     return;
   }
 
-  if (key == GLFW_KEY_S && (action & (GLFW_PRESS | GLFW_REPEAT)))
+  if (key == GLFW_KEY_S && (action & KEY_ACTION))
   {
     cam_process_key(camera, CAMERA_BACKWARD, frame_time);
     return;
   }
 
-  if (key == GLFW_KEY_A && (action & (GLFW_PRESS | GLFW_REPEAT)))
+  if (key == GLFW_KEY_A && (action & KEY_ACTION))
   {
     cam_process_key(camera, CAMERA_LEFT, frame_time);
     return;
   }
 
-  if (key == GLFW_KEY_D && (action & (GLFW_PRESS | GLFW_REPEAT)))
+  if (key == GLFW_KEY_D && (action & KEY_ACTION))
   {
     cam_process_key(camera, CAMERA_RIGHT, frame_time);
+    return;
+  }
+
+  if (key == GLFW_KEY_SPACE && (action & KEY_ACTION))
+  {
+    cam_process_key(camera, CAMERA_UP, frame_time);
+    return;
+  }
+
+  if (key == GLFW_KEY_LEFT_SHIFT && (action & KEY_ACTION))
+  {
+    cam_process_key(camera, CAMERA_DOWN, frame_time);
     return;
   }
 }

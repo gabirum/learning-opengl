@@ -20,6 +20,8 @@ enum camera_mov_e
   CAMERA_BACKWARD,
   CAMERA_LEFT,
   CAMERA_RIGHT,
+  CAMERA_UP,
+  CAMERA_DOWN,
 };
 
 typedef struct camera_s

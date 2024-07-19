@@ -78,6 +78,21 @@ void cam_process_key(camera_t *camera, enum camera_mov_e direction, float frame_
     break;
   }
 
+  case CAMERA_UP:
+  {
+    glm_vec3_scale(camera->up, velocity, scale);
+    glm_vec3_add(camera->pos, scale, result);
+    memcpy(camera->pos, result, sizeof(vec3));
+    break;
+  }
+
+  case CAMERA_DOWN:
+  {
+    glm_vec3_scale(camera->up, velocity, scale);
+    glm_vec3_sub(camera->pos, scale, result);
+    memcpy(camera->pos, result, sizeof(vec3));
+  }
+
   default:
     break;
   }
