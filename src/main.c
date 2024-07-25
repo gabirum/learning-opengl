@@ -21,71 +21,56 @@ static void mouse_cb(GLFWwindow *window, double xpos, double ypos);
 static void scroll_cb(GLFWwindow *window, double xoff, double yoff);
 static bool create_texture(char const *filename, unsigned int *texture, GLint color_format);
 
-static int screen_width = 800;
-static int screen_height = 600;
-static float lastx = 400;
-static float lasty = 300;
+#define DEFAULT_SCR_W 1280
+#define DEFAULT_SCR_H 720
 
-static float const cube_vertices[] = {
-    -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-    0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
-    0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-    0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-    -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+static int screen_width = DEFAULT_SCR_W;
+static int screen_height = DEFAULT_SCR_H;
+static float lastx = DEFAULT_SCR_W / 2;
+static float lasty = DEFAULT_SCR_H / 2;
 
-    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-    0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-    0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-    0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-    -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
-    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+static float const CUBE_VERTICES[] = {
+    -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+    0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+    0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+    0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+    -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+    -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
 
-    -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-    -0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-    -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+    0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+    0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+    0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+    -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
 
-    0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-    0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-    0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-    0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-    0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-    0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+    -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+    -0.5f, 0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+    -0.5f, -0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+    -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
 
-    -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-    0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
-    0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-    0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-    -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+    0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+    0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+    0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+    0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+    0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+    0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
 
-    -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-    0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-    0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-    0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-    -0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
-    -0.5f, 0.5f, -0.5f, 0.0f, 1.0f};
+    -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
+    0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
+    0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+    0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+    -0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
 
-static unsigned int const square_indices[] = {
-    0, 1, 3, // first triangle
-    1, 2, 3  // second triangle
-};
-
-static vec3 cube_positions[] = {
-    {0.0f, 0.0f, 0.0f},
-    {2.0f, 5.0f, -15.0f},
-    {-1.5f, -2.2f, -2.5f},
-    {-3.8f, -2.0f, -12.3f},
-    {2.4f, -0.4f, -3.5f},
-    {-1.7f, 3.0f, -7.5f},
-    {1.3f, -2.0f, -2.5f},
-    {1.5f, 2.0f, -2.5f},
-    {1.5f, 0.2f, -1.5f},
-    {-1.3f, 1.0f, -1.5},
-};
+    -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+    0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+    0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+    0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+    -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+    -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f};
 
 static float frame_time = 0.f;
 static float last_frame = 0.f;
@@ -93,6 +78,8 @@ static float last_frame = 0.f;
 static bool is_first_mouse_enter = true;
 
 static camera_t *camera;
+
+static vec3 LIGHT_POS = {1.2f, 1.f, 2.f};
 
 int main(int argc, char const *argv[])
 {
@@ -138,7 +125,7 @@ int main(int argc, char const *argv[])
 
   glEnable(GL_DEPTH_TEST);
 
-  camera = cam_new_defaults();
+  camera = cam_new((vec3){0.f, 0.f, 3.f}, (vec3){0.f, 1.f, 0.f}, (vec3){0.f, 0.f, -3.f}, DEFAULT_YAW, DEFAULT_PITCH, DEFAULT_SPEED, DEFAULT_SENSE, DEFAULT_ZOOM);
   if (camera == NULL)
   {
     retval = EXIT_FAILURE;
@@ -146,46 +133,43 @@ int main(int argc, char const *argv[])
   }
   cam_set_constrain_pitch(camera, true);
 
-  shader_t *shader = shader_new("resources/shaders/shader.vert", "resources/shaders/shader.frag");
-  if (shader == NULL)
+  shader_t *cube_shader = shader_new("resources/shaders/cube.vert", "resources/shaders/cube.frag");
+  if (cube_shader == NULL)
   {
     retval = EXIT_FAILURE;
     goto destroy_cam;
   }
 
-  unsigned int vbo, vao;
-  glGenVertexArrays(1, &vao);
+  shader_t *light_cube_shader = shader_new("resources/shaders/light.vert", "resources/shaders/light.frag");
+  if (light_cube_shader == NULL)
+  {
+    retval = EXIT_FAILURE;
+    goto destroy_cube_shader;
+  }
+
+  GLuint vbo, cube_vao;
+  glGenVertexArrays(1, &cube_vao);
   glGenBuffers(1, &vbo);
 
-  glBindVertexArray(vao);
+  glBindVertexArray(cube_vao);
 
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(cube_vertices), cube_vertices, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(CUBE_VERTICES), CUBE_VERTICES, GL_STATIC_DRAW);
 
   // position attribute
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
-
-  // texture coord attribute
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
 
-  unsigned int texture1, texture2;
-  if (!create_texture("resources/textures/container.jpg", &texture1, GL_RGB))
-  {
-    retval = EXIT_FAILURE;
-    goto destroy_shader;
-  }
+  GLuint light_cube_vao;
+  glGenVertexArrays(1, &light_cube_vao);
+  glBindVertexArray(light_cube_vao);
 
-  if (!create_texture("resources/textures/awesomeface.png", &texture2, GL_RGBA))
-  {
-    retval = EXIT_FAILURE;
-    goto delete_texture_1;
-  }
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
-  shader_use(shader);
-  shader_set_int(shader, "texture1", 0);
-  shader_set_int(shader, "texture2", 1);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
+  glEnableVertexAttribArray(0);
 
   while (!glfwWindowShouldClose(window))
   {
@@ -193,49 +177,52 @@ int main(int argc, char const *argv[])
     frame_time = current_frame - last_frame;
     last_frame = current_frame;
 
-    glClearColor(.2f, .3f, .3f, 1.f);
+    glClearColor(0.f, 0.f, 0.f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture1);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, texture2);
-
-    shader_use(shader);
+    shader_use(cube_shader);
+    shader_set_vec3(cube_shader, "objectColor", (vec3){1.f, .5f, .31f});
+    shader_set_vec3(cube_shader, "lightColor", (vec3){1.f, 1.f, 1.f});
 
     mat4 projection;
     glm_perspective(glm_rad(cam_get_zoom(camera)), ((float)screen_width) / ((float)screen_height), .1f, 100.f, projection);
-    shader_set_mat4(shader, "projection", projection);
+    shader_set_mat4(cube_shader, "projection", projection);
 
     mat4 view;
     cam_get_view_matrix(camera, view);
-    shader_set_mat4(shader, "view", view);
+    shader_set_mat4(cube_shader, "view", view);
 
-    glBindVertexArray(vao);
-    for (int i = 0; i < 10; i++)
-    {
-      mat4 model = GLM_MAT4_IDENTITY_INIT;
-      glm_translate(model, cube_positions[i]);
+    mat4 cube_model = GLM_MAT4_IDENTITY_INIT;
+    shader_set_mat4(cube_shader, "model", cube_model);
 
-      float angle = 20.f * i;
-      glm_rotate(model, glm_rad(angle), (vec3){1.f, .3f, .5f});
-      shader_set_mat4(shader, "model", model);
+    glBindVertexArray(cube_vao);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
 
-      glDrawArrays(GL_TRIANGLES, 0, 36);
-    }
+    // light object
+    shader_use(light_cube_shader);
+    shader_set_mat4(light_cube_shader, "projection", projection);
+    shader_set_mat4(light_cube_shader, "view", view);
+
+    mat4 light_cube_model = GLM_MAT4_IDENTITY_INIT;
+    glm_translate(light_cube_model, LIGHT_POS);
+    glm_scale(light_cube_model, (vec3){.2f, .2f, .2f});
+    shader_set_mat4(light_cube_shader, "model", light_cube_model);
+
+    glBindVertexArray(light_cube_vao);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
 
-  glDeleteTextures(1, &texture2);
-delete_texture_1:
-  glDeleteTextures(1, &texture1);
 clean_buffers:
-  glDeleteVertexArrays(1, &vao);
+  glDeleteVertexArrays(1, &cube_vao);
+  glDeleteVertexArrays(1, &light_cube_vao);
   glDeleteBuffers(1, &vbo);
-destroy_shader:
-  shader_destroy(shader);
+destroy_light_shader:
+  shader_destroy(light_cube_shader);
+destroy_cube_shader:
+  shader_destroy(cube_shader);
 destroy_cam:
   cam_destroy(camera);
 destroy:
@@ -258,43 +245,43 @@ static void framebuffer_size_cb(GLFWwindow *window, int width, int height)
   glViewport(0, 0, width, height);
 }
 
-static int const KEY_ACTION = GLFW_PRESS | GLFW_REPEAT;
+static int const VALID_ACTION = GLFW_PRESS | GLFW_REPEAT;
 static void key_cb(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     glfwSetWindowShouldClose(window, GLFW_TRUE);
 
-  if (key == GLFW_KEY_W && (action & KEY_ACTION))
+  if (key == GLFW_KEY_W && (action & VALID_ACTION))
   {
     cam_process_key(camera, CAMERA_FORWARD, frame_time);
     return;
   }
 
-  if (key == GLFW_KEY_S && (action & KEY_ACTION))
+  if (key == GLFW_KEY_S && (action & VALID_ACTION))
   {
     cam_process_key(camera, CAMERA_BACKWARD, frame_time);
     return;
   }
 
-  if (key == GLFW_KEY_A && (action & KEY_ACTION))
+  if (key == GLFW_KEY_A && (action & VALID_ACTION))
   {
     cam_process_key(camera, CAMERA_LEFT, frame_time);
     return;
   }
 
-  if (key == GLFW_KEY_D && (action & KEY_ACTION))
+  if (key == GLFW_KEY_D && (action & VALID_ACTION))
   {
     cam_process_key(camera, CAMERA_RIGHT, frame_time);
     return;
   }
 
-  if (key == GLFW_KEY_SPACE && (action & KEY_ACTION))
+  if (key == GLFW_KEY_SPACE && (action & VALID_ACTION))
   {
     cam_process_key(camera, CAMERA_UP, frame_time);
     return;
   }
 
-  if (key == GLFW_KEY_LEFT_SHIFT && (action & KEY_ACTION))
+  if (key == GLFW_KEY_LEFT_SHIFT && (action & VALID_ACTION))
   {
     cam_process_key(camera, CAMERA_DOWN, frame_time);
     return;
@@ -324,9 +311,9 @@ static void scroll_cb(GLFWwindow *window, double xoff, double yoff)
   cam_process_scroll(camera, yoff);
 }
 
-static bool create_texture(char const *filename, unsigned int *texture, GLint color_format)
+static bool create_texture(char const *filename, GLuint *texture, GLint color_format)
 {
-  unsigned int new_texture;
+  GLuint new_texture;
   glGenTextures(1, &new_texture);
   glBindTexture(GL_TEXTURE_2D, new_texture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);

@@ -5,15 +5,18 @@
 
 #include "fs.h"
 
-#define LOG_ERR(format, ...) fprintf(stderr, "err in file %s:%d: " format "\n", __FILE__, __LINE__, ##__VA_ARGS__)
+#define LOG_ERR(format, ...) fprintf(stderr, "error @ %s:%d: " format "\n", __FILE__, __LINE__, ##__VA_ARGS__)
 
-static bool compile_shader(char const *filename, GLenum shader_type, unsigned int *shader)
+static bool compile_shader(char const *filename, GLenum shader_type, GLuint *shader)
 {
   uint8_t *shader_source = fs_read_all_file(filename);
   if (shader_source == NULL)
+  {
+    LOG_ERR("cannot open file: %s", filename);
     return false;
+  }
 
-  unsigned int new_shader = glCreateShader(shader_type);
+  GLuint new_shader = glCreateShader(shader_type);
   glShaderSource(new_shader, 1, (char const *const *)&shader_source, NULL);
   glCompileShader(new_shader);
   free(shader_source);
@@ -34,9 +37,9 @@ static bool compile_shader(char const *filename, GLenum shader_type, unsigned in
   return true;
 }
 
-static bool compile_program(unsigned int vertex, unsigned int frag, unsigned int *program)
+static bool compile_program(GLuint vertex, GLuint frag, GLuint *program)
 {
-  unsigned int new_program = glCreateProgram();
+  GLuint new_program = glCreateProgram();
   glAttachShader(new_program, vertex);
   glAttachShader(new_program, frag);
   glLinkProgram(new_program);
@@ -66,7 +69,7 @@ shader_t *shader_new(char const *vertex_path, char const *frag_path)
     return NULL;
   }
 
-  unsigned int vertex, frag;
+  GLuint vertex, frag;
   if (!compile_shader(vertex_path, GL_VERTEX_SHADER, &vertex))
   {
     free(shader);

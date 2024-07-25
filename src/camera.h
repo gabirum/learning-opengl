@@ -11,8 +11,8 @@
 #define DEFAULT_SENSE .1f
 #define DEFAULT_ZOOM 45.f
 #define DEFAULT_POS ((vec3){0.f, 0.f, 0.f})
-#define DEFAULT_UP ((vec3){0.f, 1.f, 0.f})
-#define DEFAULT_FRONT ((vec3){0.f, 0.f, -1.f})
+#define DEFAULT_UP ((vec3){0.f, 0.f, 0.f})
+#define DEFAULT_FRONT ((vec3){0.f, 0.f, 0.f})
 
 enum camera_mov_e
 {

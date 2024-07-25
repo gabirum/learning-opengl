@@ -16,14 +16,11 @@ uint8_t *fs_read_all_file(char const *filename)
   rewind(file);
 
   uint8_t *data = calloc(size + 1, 1);
-  if (data == NULL)
+  if (data != NULL)
   {
-    goto close;
+    fread(data, 1, size, file);
   }
 
-  fread(data, 1, size, file);
-
-close:
   fclose(file);
 
   return data;

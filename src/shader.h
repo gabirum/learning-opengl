@@ -8,7 +8,7 @@
 
 typedef struct shader_s
 {
-  unsigned int program_id;
+  GLuint program_id;
 } shader_t;
 
 shader_t *shader_new(char const *vertex_path, char const *frag_path);
@@ -32,6 +32,11 @@ static inline void shader_set_bool(shader_t *shader, char const *property, bool 
 static inline void shader_set_float(shader_t *shader, char const *property, float value)
 {
   glUniform1f(glGetUniformLocation(shader->program_id, property), value);
+}
+
+static inline void shader_set_vec3(shader_t *shader, char const *property, vec3 vector)
+{
+  glUniform3fv(glGetUniformLocation(shader->program_id, property), 1, vector);
 }
 
 static inline void shader_set_mat4(shader_t *shader, char const *property, mat4 matrix)
