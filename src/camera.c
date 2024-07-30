@@ -3,14 +3,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-camera_t *cam_new(vec3 pos, vec3 up, vec3 front, float yaw, float pitch, float mov_speed, float sense, float zoom)
-{
-  camera_t *camera = calloc(1, sizeof(camera_t));
-  if (camera == NULL)
-  {
-    return NULL;
-  }
+#include <cglm/cglm.h>
 
+inline void cam_init(vec3 pos, vec3 up, vec3 front, float yaw, float pitch, float mov_speed, float sense, float zoom, camera_t *camera)
+{
   memcpy(camera->pos, pos, sizeof(vec3));
   memcpy(camera->up, up, sizeof(vec3));
   memcpy(camera->front, front, sizeof(vec3));
@@ -19,16 +15,34 @@ camera_t *cam_new(vec3 pos, vec3 up, vec3 front, float yaw, float pitch, float m
   camera->mov_speed = mov_speed;
   camera->mouse_sense = sense;
   camera->zoom = zoom;
-
-  return camera;
 }
 
-void cam_destroy(camera_t *camera)
+inline void cam_init_defaults(camera_t *camera)
 {
-  free(camera);
+  cam_init(DEFAULT_POS, DEFAULT_UP, DEFAULT_FRONT, DEFAULT_YAW, DEFAULT_PITCH, DEFAULT_SPEED, DEFAULT_SENSE, DEFAULT_ZOOM, camera);
 }
 
-void cam_get_view_matrix(camera_t *camera, mat4 view_matrix)
+inline void cam_get_pos(camera_t *camera, vec3 pos)
+{
+  memcpy(pos, camera->pos, sizeof(vec3));
+}
+
+inline bool cam_get_constrain_pitch(camera_t *camera)
+{
+  return camera->constrain_pitch;
+}
+
+inline void cam_set_constrain_pitch(camera_t *camera, bool value)
+{
+  camera->constrain_pitch = value;
+}
+
+inline float cam_get_zoom(camera_t *camera)
+{
+  return camera->zoom;
+}
+
+inline void cam_get_view_matrix(camera_t *camera, mat4 view_matrix)
 {
   vec3 center;
   glm_vec3_add(camera->pos, camera->front, center);
@@ -119,7 +133,7 @@ void cam_process_mouse(camera_t *camera, float xoff, float yoff)
   memcpy(camera->front, direction, sizeof(direction));
 }
 
-void cam_process_scroll(camera_t *camera, float offset)
+inline void cam_process_scroll(camera_t *camera, float offset)
 {
   camera->zoom = glm_clamp(camera->zoom + offset, 1.f, 70.f);
 }

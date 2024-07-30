@@ -19,7 +19,7 @@ static void framebuffer_size_cb(GLFWwindow *window, int width, int height);
 static void key_cb(GLFWwindow *window, int key, int scancode, int action, int mods);
 static void mouse_cb(GLFWwindow *window, double xpos, double ypos);
 static void scroll_cb(GLFWwindow *window, double xoff, double yoff);
-static bool create_texture(char const *filename, unsigned int *texture, GLint color_format);
+static bool create_texture(char const *filename, GLuint *texture, GLint color_format);
 
 #define DEFAULT_SCR_W 1280
 #define DEFAULT_SCR_H 720
@@ -77,7 +77,7 @@ static float last_frame = 0.f;
 
 static bool is_first_mouse_enter = true;
 
-static camera_t *camera;
+static camera_t camera;
 
 static vec3 LIGHT_POS = {1.2f, 1.f, 2.f};
 
@@ -125,23 +125,27 @@ int main(int argc, char const *argv[])
 
   glEnable(GL_DEPTH_TEST);
 
-  camera = cam_new((vec3){0.f, 0.f, 3.f}, (vec3){0.f, 1.f, 0.f}, (vec3){0.f, 0.f, -3.f}, DEFAULT_YAW, DEFAULT_PITCH, DEFAULT_SPEED, DEFAULT_SENSE, DEFAULT_ZOOM);
-  if (camera == NULL)
+  cam_init(
+      (vec3){0.f, 0.f, 3.f},
+      (vec3){0.f, 1.f, 0.f},
+      (vec3){0.f, 0.f, -3.f},
+      DEFAULT_YAW,
+      DEFAULT_PITCH,
+      DEFAULT_SPEED,
+      DEFAULT_SENSE,
+      DEFAULT_ZOOM,
+      &camera);
+  cam_set_constrain_pitch(&camera, true);
+
+  shader_t cube_shader;
+  if (!shader_init("resources/shaders/cube.vert", "resources/shaders/cube.frag", &cube_shader))
   {
     retval = EXIT_FAILURE;
     goto destroy;
   }
-  cam_set_constrain_pitch(camera, true);
 
-  shader_t *cube_shader = shader_new("resources/shaders/cube.vert", "resources/shaders/cube.frag");
-  if (cube_shader == NULL)
-  {
-    retval = EXIT_FAILURE;
-    goto destroy_cam;
-  }
-
-  shader_t *light_cube_shader = shader_new("resources/shaders/light.vert", "resources/shaders/light.frag");
-  if (light_cube_shader == NULL)
+  shader_t light_cube_shader;
+  if (!shader_init("resources/shaders/light.vert", "resources/shaders/light.frag", &light_cube_shader))
   {
     retval = EXIT_FAILURE;
     goto destroy_cube_shader;
@@ -151,12 +155,11 @@ int main(int argc, char const *argv[])
   glGenVertexArrays(1, &cube_vao);
   glGenBuffers(1, &vbo);
 
-  glBindVertexArray(cube_vao);
-
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
   glBufferData(GL_ARRAY_BUFFER, sizeof(CUBE_VERTICES), CUBE_VERTICES, GL_STATIC_DRAW);
 
-  // position attribute
+  glBindVertexArray(cube_vao);
+
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
@@ -173,40 +176,47 @@ int main(int argc, char const *argv[])
 
   while (!glfwWindowShouldClose(window))
   {
-    float current_frame = glfwGetTime();
-    frame_time = current_frame - last_frame;
-    last_frame = current_frame;
+    float current_time = glfwGetTime();
+    frame_time = current_time - last_frame;
+    last_frame = current_time;
 
     glClearColor(0.f, 0.f, 0.f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    shader_use(cube_shader);
-    shader_set_vec3(cube_shader, "objectColor", (vec3){1.f, .5f, .31f});
-    shader_set_vec3(cube_shader, "lightColor", (vec3){1.f, 1.f, 1.f});
+    LIGHT_POS[0] = 1.f + sinf(current_time) * 2.f;
+    LIGHT_POS[2] = 1.f + cosf(current_time) * 2.f;
+
+    shader_use(&cube_shader);
+    shader_set_vec3(&cube_shader, "objectColor", (vec3){0.f, .5f, .86f});
+    shader_set_vec3(&cube_shader, "lightColor", (vec3){1.f, 1.f, 1.f});
+    shader_set_vec3(&cube_shader, "lightPos", LIGHT_POS);
+    vec3 cam_pos;
+    cam_get_pos(&camera, cam_pos);
+    shader_set_vec3(&cube_shader, "viewPos", cam_pos);
 
     mat4 projection;
-    glm_perspective(glm_rad(cam_get_zoom(camera)), ((float)screen_width) / ((float)screen_height), .1f, 100.f, projection);
-    shader_set_mat4(cube_shader, "projection", projection);
+    glm_perspective(glm_rad(cam_get_zoom(&camera)), ((float)screen_width) / ((float)screen_height), .1f, 100.f, projection);
+    shader_set_mat4(&cube_shader, "projection", projection);
 
     mat4 view;
-    cam_get_view_matrix(camera, view);
-    shader_set_mat4(cube_shader, "view", view);
+    cam_get_view_matrix(&camera, view);
+    shader_set_mat4(&cube_shader, "view", view);
 
     mat4 cube_model = GLM_MAT4_IDENTITY_INIT;
-    shader_set_mat4(cube_shader, "model", cube_model);
+    shader_set_mat4(&cube_shader, "model", cube_model);
 
     glBindVertexArray(cube_vao);
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
     // light object
-    shader_use(light_cube_shader);
-    shader_set_mat4(light_cube_shader, "projection", projection);
-    shader_set_mat4(light_cube_shader, "view", view);
+    shader_use(&light_cube_shader);
+    shader_set_mat4(&light_cube_shader, "projection", projection);
+    shader_set_mat4(&light_cube_shader, "view", view);
 
     mat4 light_cube_model = GLM_MAT4_IDENTITY_INIT;
     glm_translate(light_cube_model, LIGHT_POS);
     glm_scale(light_cube_model, (vec3){.2f, .2f, .2f});
-    shader_set_mat4(light_cube_shader, "model", light_cube_model);
+    shader_set_mat4(&light_cube_shader, "model", light_cube_model);
 
     glBindVertexArray(light_cube_vao);
     glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -220,11 +230,9 @@ clean_buffers:
   glDeleteVertexArrays(1, &light_cube_vao);
   glDeleteBuffers(1, &vbo);
 destroy_light_shader:
-  shader_destroy(light_cube_shader);
+  shader_deinit(&light_cube_shader);
 destroy_cube_shader:
-  shader_destroy(cube_shader);
-destroy_cam:
-  cam_destroy(camera);
+  shader_deinit(&cube_shader);
 destroy:
   glfwDestroyWindow(window);
 terminate:
@@ -249,41 +257,44 @@ static int const VALID_ACTION = GLFW_PRESS | GLFW_REPEAT;
 static void key_cb(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+  {
     glfwSetWindowShouldClose(window, GLFW_TRUE);
+    return;
+  }
 
   if (key == GLFW_KEY_W && (action & VALID_ACTION))
   {
-    cam_process_key(camera, CAMERA_FORWARD, frame_time);
+    cam_process_key(&camera, CAMERA_FORWARD, frame_time);
     return;
   }
 
   if (key == GLFW_KEY_S && (action & VALID_ACTION))
   {
-    cam_process_key(camera, CAMERA_BACKWARD, frame_time);
+    cam_process_key(&camera, CAMERA_BACKWARD, frame_time);
     return;
   }
 
   if (key == GLFW_KEY_A && (action & VALID_ACTION))
   {
-    cam_process_key(camera, CAMERA_LEFT, frame_time);
+    cam_process_key(&camera, CAMERA_LEFT, frame_time);
     return;
   }
 
   if (key == GLFW_KEY_D && (action & VALID_ACTION))
   {
-    cam_process_key(camera, CAMERA_RIGHT, frame_time);
+    cam_process_key(&camera, CAMERA_RIGHT, frame_time);
     return;
   }
 
   if (key == GLFW_KEY_SPACE && (action & VALID_ACTION))
   {
-    cam_process_key(camera, CAMERA_UP, frame_time);
+    cam_process_key(&camera, CAMERA_UP, frame_time);
     return;
   }
 
   if (key == GLFW_KEY_LEFT_SHIFT && (action & VALID_ACTION))
   {
-    cam_process_key(camera, CAMERA_DOWN, frame_time);
+    cam_process_key(&camera, CAMERA_DOWN, frame_time);
     return;
   }
 }
@@ -303,12 +314,12 @@ static void mouse_cb(GLFWwindow *window, double xpos, double ypos)
   lastx = xpos;
   lasty = ypos;
 
-  cam_process_mouse(camera, xoff, yoff);
+  cam_process_mouse(&camera, xoff, yoff);
 }
 
 static void scroll_cb(GLFWwindow *window, double xoff, double yoff)
 {
-  cam_process_scroll(camera, yoff);
+  cam_process_scroll(&camera, yoff);
 }
 
 static bool create_texture(char const *filename, GLuint *texture, GLint color_format)

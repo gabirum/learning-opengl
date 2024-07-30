@@ -11,37 +11,15 @@ typedef struct shader_s
   GLuint program_id;
 } shader_t;
 
-shader_t *shader_new(char const *vertex_path, char const *frag_path);
-void shader_destroy(shader_t *shader);
+bool shader_init(char const *vertex_path, char const *frag_path, shader_t *shader);
+extern inline void shader_deinit(shader_t *shader);
 
-static inline void shader_use(shader_t *shader)
-{
-  glUseProgram(shader->program_id);
-}
+extern inline void shader_use(shader_t *shader);
 
-static inline void shader_set_int(shader_t *shader, char const *property, int value)
-{
-  glUniform1i(glGetUniformLocation(shader->program_id, property), value);
-}
-
-static inline void shader_set_bool(shader_t *shader, char const *property, bool value)
-{
-  shader_set_int(shader, property, (int)value);
-}
-
-static inline void shader_set_float(shader_t *shader, char const *property, float value)
-{
-  glUniform1f(glGetUniformLocation(shader->program_id, property), value);
-}
-
-static inline void shader_set_vec3(shader_t *shader, char const *property, vec3 vector)
-{
-  glUniform3fv(glGetUniformLocation(shader->program_id, property), 1, vector);
-}
-
-static inline void shader_set_mat4(shader_t *shader, char const *property, mat4 matrix)
-{
-  glUniformMatrix4fv(glGetUniformLocation(shader->program_id, property), 1, GL_FALSE, (GLfloat const *)matrix);
-}
+extern inline void shader_set_int(shader_t *shader, char const *property, int value);
+extern inline void shader_set_bool(shader_t *shader, char const *property, bool value);
+extern inline void shader_set_float(shader_t *shader, char const *property, float value);
+extern inline void shader_set_vec3(shader_t *shader, char const *property, vec3 vector);
+extern inline void shader_set_mat4(shader_t *shader, char const *property, mat4 matrix);
 
 #endif // _SHADER_H_
