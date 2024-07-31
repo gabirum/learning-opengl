@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.25.0)
 project(render VERSION 0.1.0 LANGUAGES C)
 
+set(CMAKE_C_STANDARD 17)
+
 file(GLOB sources "src/*.c" "src/**/*.c")
 add_executable(render ${sources})
 target_compile_features(render PRIVATE c_std_17)

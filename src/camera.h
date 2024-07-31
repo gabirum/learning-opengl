@@ -2,8 +2,9 @@
 #define _CAMERA_H_
 
 #include <stdbool.h>
+#include <string.h>
 
-#include <cglm/types.h>
+#include <cglm/cglm.h>
 
 #define DEFAULT_YAW -90.f
 #define DEFAULT_PITCH 0.f
@@ -31,18 +32,46 @@ typedef struct camera_s
   float yaw, pitch, mov_speed, mouse_sense, zoom;
 } camera_t;
 
-extern inline void cam_init(vec3 pos, vec3 up, vec3 front, float yaw, float pitch, float mov_speed, float sense, float zoom, camera_t *camera);
-extern inline void cam_init_defaults(camera_t *camera);
+inline void cam_init(vec3 pos, vec3 up, vec3 front, float yaw, float pitch, float mov_speed, float sense, float zoom, camera_t *camera)
+{
+  memcpy(camera->pos, pos, sizeof(vec3));
+  memcpy(camera->up, up, sizeof(vec3));
+  memcpy(camera->front, front, sizeof(vec3));
+  camera->yaw = yaw;
+  camera->pitch = pitch;
+  camera->mov_speed = mov_speed;
+  camera->mouse_sense = sense;
+  camera->zoom = zoom;
+}
 
-extern inline void cam_get_pos(camera_t *camera, vec3 pos);
-extern inline bool cam_get_constrain_pitch(camera_t *camera);
-extern inline void cam_set_constrain_pitch(camera_t *camera, bool value);
-extern inline float cam_get_zoom(camera_t *camera);
+inline void cam_init_defaults(camera_t *camera)
+{
+  cam_init(DEFAULT_POS, DEFAULT_UP, DEFAULT_FRONT, DEFAULT_YAW, DEFAULT_PITCH, DEFAULT_SPEED, DEFAULT_SENSE, DEFAULT_ZOOM, camera);
+}
 
-extern inline void cam_get_view_matrix(camera_t *camera, mat4 view_matrix);
+inline void cam_get_pos(camera_t *camera, vec3 pos)
+{
+  memcpy(pos, camera->pos, sizeof(vec3));
+}
 
+inline bool cam_get_constrain_pitch(camera_t *camera)
+{
+  return camera->constrain_pitch;
+}
+
+inline void cam_set_constrain_pitch(camera_t *camera, bool value)
+{
+  camera->constrain_pitch = value;
+}
+
+inline float cam_get_zoom(camera_t *camera)
+{
+  return camera->zoom;
+}
+
+void cam_get_view_matrix(camera_t *camera, mat4 view_matrix);
 void cam_process_key(camera_t *camera, enum camera_mov_e direction, float frame_time);
 void cam_process_mouse(camera_t *camera, float xoff, float yoff);
-extern inline void cam_process_scroll(camera_t *camera, float offset);
+void cam_process_scroll(camera_t *camera, float offset);
 
 #endif // _CAMERA_H_
