@@ -19,7 +19,7 @@ static void framebuffer_size_cb(GLFWwindow *window, int width, int height);
 static void key_cb(GLFWwindow *window, int key, int scancode, int action, int mods);
 static void mouse_cb(GLFWwindow *window, double xpos, double ypos);
 static void scroll_cb(GLFWwindow *window, double xoff, double yoff);
-static bool create_texture(char const *filename, GLuint *texture, GLint color_format);
+static bool create_texture(char const *filename, GLuint *texture);
 
 #define DEFAULT_SCR_W 1280
 #define DEFAULT_SCR_H 720
@@ -30,47 +30,47 @@ static float lastx = DEFAULT_SCR_W / 2;
 static float lasty = DEFAULT_SCR_H / 2;
 
 static float const CUBE_VERTICES[] = {
-    -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
-    0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
-    0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
-    0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
-    -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
-    -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+    -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
+    0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f,
+    0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f,
+    0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f,
+    -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
 
-    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
-    0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
-    0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
-    0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
-    -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
-    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+    0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
+    0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+    0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+    -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
 
-    -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
-    -0.5f, 0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
-    -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
-    -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
-    -0.5f, -0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
-    -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+    -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+    -0.5f, 0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+    -0.5f, -0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+    -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
 
-    0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
-    0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
-    0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
-    0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
-    0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
-    0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+    0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+    0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+    0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+    0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+    0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+    0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
 
-    -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
-    0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
-    0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
-    0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
-    -0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
-    -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f,
+    0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f,
+    0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+    0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+    -0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f,
 
-    -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
-    0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
-    0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
-    0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
-    -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
-    -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f};
+    -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+    0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+    0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+    0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+    -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+    -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f};
 
 static float frame_time = 0.f;
 static float last_frame = 0.f;
@@ -79,7 +79,7 @@ static bool is_first_mouse_enter = true;
 
 static camera_t camera;
 
-static vec3 LIGHT_POS = {1.2f, 1.f, 2.f};
+static vec3 light_pos = {1.2f, 1.f, 2.f};
 
 int main(int argc, char const *argv[])
 {
@@ -159,11 +159,12 @@ int main(int argc, char const *argv[])
   glBufferData(GL_ARRAY_BUFFER, sizeof(CUBE_VERTICES), CUBE_VERTICES, GL_STATIC_DRAW);
 
   glBindVertexArray(cube_vao);
-
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
+  glEnableVertexAttribArray(2);
 
   GLuint light_cube_vao;
   glGenVertexArrays(1, &light_cube_vao);
@@ -171,8 +172,26 @@ int main(int argc, char const *argv[])
 
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
+  
+  GLuint diffuse_map;
+  if (!create_texture("resources/textures/container2.png", &diffuse_map))
+  {
+    retval = EXIT_FAILURE;
+    goto clean_buffers;
+  }
+
+  GLuint specular_map;
+  if (!create_texture("resources/textures/container2_specular.png", &specular_map))
+  {
+    retval = EXIT_FAILURE;
+    goto destroy_diffuse_tex;
+  }
+
+  shader_use(&cube_shader);
+  shader_set_int(&cube_shader, "material.diffuse", 0);
+  shader_set_int(&cube_shader, "material.specular", 1);
 
   while (!glfwWindowShouldClose(window))
   {
@@ -183,16 +202,23 @@ int main(int argc, char const *argv[])
     glClearColor(0.f, 0.f, 0.f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    LIGHT_POS[0] = 1.f + sinf(current_time) * 2.f;
-    LIGHT_POS[2] = 1.f + cosf(current_time) * 2.f;
+    /* light_pos[0] = 1.f + sinf(current_time) * 2.f;
+    light_pos[2] = 1.f + cosf(current_time) * 2.f; */
 
     shader_use(&cube_shader);
-    shader_set_vec3(&cube_shader, "objectColor", (vec3){0.f, .5f, .86f});
-    shader_set_vec3(&cube_shader, "lightColor", (vec3){1.f, 1.f, 1.f});
-    shader_set_vec3(&cube_shader, "lightPos", LIGHT_POS);
+
+    shader_set_vec3(&cube_shader, "light.position", light_pos);
+
     vec3 cam_pos;
     cam_get_pos(&camera, cam_pos);
     shader_set_vec3(&cube_shader, "viewPos", cam_pos);
+
+    shader_set_vec3(&cube_shader, "light.ambient", (vec3){.2f, .2f, .2f});
+    shader_set_vec3(&cube_shader, "light.diffuse", (vec3){.5f, .5f, .5f});
+    shader_set_vec3(&cube_shader, "light.specular", (vec3){1.f, 1.f, 1.f});
+
+    shader_set_vec3(&cube_shader, "material.specular", (vec3){.5f, .5f, .5f});
+    shader_set_float(&cube_shader, "material.shininess", 64.f);
 
     mat4 projection;
     glm_perspective(glm_rad(cam_get_zoom(&camera)), ((float)screen_width) / ((float)screen_height), .1f, 100.f, projection);
@@ -205,6 +231,11 @@ int main(int argc, char const *argv[])
     mat4 cube_model = GLM_MAT4_IDENTITY_INIT;
     shader_set_mat4(&cube_shader, "model", cube_model);
 
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, diffuse_map);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, specular_map);
+
     glBindVertexArray(cube_vao);
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
@@ -214,7 +245,7 @@ int main(int argc, char const *argv[])
     shader_set_mat4(&light_cube_shader, "view", view);
 
     mat4 light_cube_model = GLM_MAT4_IDENTITY_INIT;
-    glm_translate(light_cube_model, LIGHT_POS);
+    glm_translate(light_cube_model, light_pos);
     glm_scale(light_cube_model, (vec3){.2f, .2f, .2f});
     shader_set_mat4(&light_cube_shader, "model", light_cube_model);
 
@@ -225,6 +256,9 @@ int main(int argc, char const *argv[])
     glfwPollEvents();
   }
 
+  glDeleteTextures(1, &specular_map);
+destroy_diffuse_tex:
+  glDeleteTextures(1, &diffuse_map);
 clean_buffers:
   glDeleteVertexArrays(1, &cube_vao);
   glDeleteVertexArrays(1, &light_cube_vao);
@@ -253,12 +287,32 @@ static void framebuffer_size_cb(GLFWwindow *window, int width, int height)
   glViewport(0, 0, width, height);
 }
 
+static bool is_mouse_cursor_enabled = false;
 static int const VALID_ACTION = GLFW_PRESS | GLFW_REPEAT;
 static void key_cb(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
   {
-    glfwSetWindowShouldClose(window, GLFW_TRUE);
+    if (is_mouse_cursor_enabled)
+    {
+      glfwSetWindowShouldClose(window, GLFW_TRUE);
+    }
+    else
+    {
+      glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    }
+    is_mouse_cursor_enabled = !is_mouse_cursor_enabled;
+    return;
+  }
+
+  if (key == GLFW_KEY_ENTER && action == GLFW_PRESS)
+  {
+    if (is_mouse_cursor_enabled)
+    {
+      glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+      is_mouse_cursor_enabled = false;
+    }
+
     return;
   }
 
@@ -301,6 +355,11 @@ static void key_cb(GLFWwindow *window, int key, int scancode, int action, int mo
 
 static void mouse_cb(GLFWwindow *window, double xpos, double ypos)
 {
+  if (is_mouse_cursor_enabled)
+  {
+    return;
+  }
+
   if (is_first_mouse_enter)
   {
     lastx = xpos;
@@ -319,10 +378,15 @@ static void mouse_cb(GLFWwindow *window, double xpos, double ypos)
 
 static void scroll_cb(GLFWwindow *window, double xoff, double yoff)
 {
+  if (is_mouse_cursor_enabled)
+  {
+    return;
+  }
+
   cam_process_scroll(&camera, yoff);
 }
 
-static bool create_texture(char const *filename, GLuint *texture, GLint color_format)
+static bool create_texture(char const *filename, GLuint *texture)
 {
   GLuint new_texture;
   glGenTextures(1, &new_texture);
@@ -339,6 +403,20 @@ static bool create_texture(char const *filename, GLuint *texture, GLint color_fo
     fprintf(stderr, "Error loading image texture");
     glDeleteTextures(1, &new_texture);
     return false;
+  }
+
+  GLenum color_format;
+  if (channels == 1)
+  {
+    color_format = GL_RED;
+  }
+  else if (channels == 3)
+  {
+    color_format = GL_RGB;
+  }
+  else if (channels == 4)
+  {
+    color_format = GL_RGBA;
   }
 
   glTexImage2D(GL_TEXTURE_2D, 0, color_format, width, height, 0, color_format, GL_UNSIGNED_BYTE, data);

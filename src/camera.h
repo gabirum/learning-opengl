@@ -69,9 +69,21 @@ inline float cam_get_zoom(camera_t *camera)
   return camera->zoom;
 }
 
-void cam_get_view_matrix(camera_t *camera, mat4 view_matrix);
+// static inline due to glm functions are static inline
+static inline void cam_get_view_matrix(camera_t *camera, mat4 view_matrix)
+{
+  vec3 center;
+  glm_vec3_add(camera->pos, camera->front, center);
+  glm_lookat(camera->pos, center, camera->up, view_matrix);
+}
+
+// static inline due to glm functions are static inline
+static inline void cam_process_scroll(camera_t *camera, float offset)
+{
+  camera->zoom = glm_clamp(camera->zoom + offset, 1.f, 70.f);
+}
+
 void cam_process_key(camera_t *camera, enum camera_mov_e direction, float frame_time);
 void cam_process_mouse(camera_t *camera, float xoff, float yoff);
-void cam_process_scroll(camera_t *camera, float offset);
 
 #endif // _CAMERA_H_

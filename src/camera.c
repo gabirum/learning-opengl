@@ -84,18 +84,6 @@ void cam_process_mouse(camera_t *camera, float xoff, float yoff)
   memcpy(camera->front, direction, sizeof(direction));
 }
 
-void cam_get_view_matrix(camera_t *camera, mat4 view_matrix)
-{
-  vec3 center;
-  glm_vec3_add(camera->pos, camera->front, center);
-  glm_lookat(camera->pos, center, camera->up, view_matrix);
-}
-
-void cam_process_scroll(camera_t *camera, float offset)
-{
-  camera->zoom = glm_clamp(camera->zoom + offset, 1.f, 70.f);
-}
-
 extern inline void cam_init(vec3 pos, vec3 up, vec3 front, float yaw, float pitch, float mov_speed, float sense, float zoom, camera_t *camera);
 extern inline void cam_init_defaults(camera_t *camera);
 extern inline void cam_get_pos(camera_t *camera, vec3 pos);
