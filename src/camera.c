@@ -26,6 +26,11 @@ void cam_get_pos(camera_t *camera, vec3 pos)
   memcpy(pos, camera->pos, sizeof(vec3));
 }
 
+void cam_get_front(camera_t *camera, vec3 front)
+{
+  memcpy(front, camera->front, sizeof(vec3));
+}
+
 bool cam_get_constrain_pitch(camera_t *camera)
 {
   return camera->constrain_pitch;

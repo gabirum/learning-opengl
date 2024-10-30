@@ -28,4 +28,4 @@ CPMAddPackage(
   GITHUB_REPOSITORY recp/cglm
 )
 
-target_link_libraries(render glfw glad stb cglm)
+target_link_libraries(render m glfw glad stb cglm)

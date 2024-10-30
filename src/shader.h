@@ -6,7 +6,7 @@
 #include <glad/gl.h>
 #include <cglm/types.h>
 
-typedef struct shader_s
+typedef struct shader
 {
   GLuint program_id;
 } shader_t;

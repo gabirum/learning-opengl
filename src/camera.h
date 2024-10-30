@@ -25,10 +25,10 @@ enum camera_mov_e
   CAMERA_DOWN,
 };
 
-typedef struct camera_s
+typedef struct camera
 {
   bool constrain_pitch;
-  vec3 pos, front, up, right, world;
+  vec3 pos, front, up;
   float yaw, pitch, mov_speed, mouse_sense, zoom;
 } camera_t;
 
@@ -53,6 +53,7 @@ void cam_init(
                                            camera)
 
 void cam_get_pos(camera_t *camera, vec3 pos);
+void cam_get_front(camera_t *camera, vec3 front);
 bool cam_get_constrain_pitch(camera_t *camera);
 void cam_set_constrain_pitch(camera_t *camera, bool value);
 float cam_get_zoom(camera_t *camera);
