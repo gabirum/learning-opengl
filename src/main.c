@@ -76,22 +76,22 @@ static float const CUBE_VERTICES[] = {
     -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f};
 
 static vec3 CUBE_POSITIONS[] = {
-    (vec3){0.0f, 0.0f, 0.0f},
-    (vec3){2.0f, 5.0f, -15.0f},
-    (vec3){-1.5f, -2.2f, -2.5f},
-    (vec3){-3.8f, -2.0f, -12.3f},
-    (vec3){2.4f, -0.4f, -3.5f},
-    (vec3){-1.7f, 3.0f, -7.5f},
-    (vec3){1.3f, -2.0f, -2.5f},
-    (vec3){1.5f, 2.0f, -2.5f},
-    (vec3){1.5f, 0.2f, -1.5f},
-    (vec3){-1.3f, 1.0f, -1.5f}};
+    {0.0f, 0.0f, 0.0f},
+    {2.0f, 5.0f, -15.0f},
+    {-1.5f, -2.2f, -2.5f},
+    {-3.8f, -2.0f, -12.3f},
+    {2.4f, -0.4f, -3.5f},
+    {-1.7f, 3.0f, -7.5f},
+    {1.3f, -2.0f, -2.5f},
+    {1.5f, 2.0f, -2.5f},
+    {1.5f, 0.2f, -1.5f},
+    {-1.3f, 1.0f, -1.5f}};
 
 static vec3 POINT_LIGHT_POSITIONS[] = {
-    (vec3){.7f, .2f, 2.f},
-    (vec3){2.3f, -3.3f, -4.f},
-    (vec3){-4.f, 2.f, -12.f},
-    (vec3){0.f, 0.f, -3.f}};
+    {.7f, .2f, 2.f},
+    {2.3f, -3.3f, -4.f},
+    {-4.f, 2.f, -12.f},
+    {0.f, 0.f, -3.f}};
 
 #define SET_POINT_LIGHT(shader, index, array)                                             \
   do                                                                                      \
