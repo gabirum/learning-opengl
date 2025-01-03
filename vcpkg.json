@@ -1,0 +1,7 @@
+{
+  "dependencies": [
+    "cglm",
+    "glfw3",
+    "stb"
+  ]
+}
