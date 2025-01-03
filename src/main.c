@@ -9,7 +9,7 @@
 #include <GLFW/glfw3.h>
 #undef GLFW_INCLUDE_NONE
 
-#include <stb/stb_image.h>
+#include <stb_image.h>
 #include <cglm/cglm.h>
 
 #include "shader.h"
@@ -121,7 +121,7 @@ int main(int argc, char const *argv[])
   if (!glfwInit())
   {
     fprintf(stderr, "GLFW init failed\n");
-    return EXIT_FAILURE;
+    return 1;
   }
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -131,14 +131,11 @@ int main(int argc, char const *argv[])
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
 #endif
 
-  int retval = EXIT_SUCCESS;
-
   GLFWwindow *window = glfwCreateWindow(screen_width, screen_height, "Learning OpenGL", NULL, NULL);
   if (window == NULL)
   {
-    fprintf(stderr, "GLFW create window failed\n");
-    retval = EXIT_FAILURE;
-    goto terminate;
+    fputs("GLFW create window failed\n", stderr);
+    return 1;
   }
 
   glfwSetFramebufferSizeCallback(window, _framebuffer_size_cb);
@@ -150,9 +147,8 @@ int main(int argc, char const *argv[])
   glfwMakeContextCurrent(window);
   if (!gladLoadGL(glfwGetProcAddress))
   {
-    fprintf(stderr, "GLAD init failed\n");
-    retval = EXIT_FAILURE;
-    goto destroy;
+    fputs("GLAD init failed\n", stderr);
+    return 1;
   }
   glfwSwapInterval(GLFW_TRUE);
 
@@ -173,15 +169,13 @@ int main(int argc, char const *argv[])
   shader_t cube_shader;
   if (!shader_init("resources/shaders/cube.vert", "resources/shaders/cube.frag", &cube_shader))
   {
-    retval = EXIT_FAILURE;
-    goto destroy;
+    return 1;
   }
 
   shader_t light_cube_shader;
   if (!shader_init("resources/shaders/light.vert", "resources/shaders/light.frag", &light_cube_shader))
   {
-    retval = EXIT_FAILURE;
-    goto destroy_cube_shader;
+    return 1;
   }
 
   GLuint vbo, cube_vao;
@@ -211,15 +205,13 @@ int main(int argc, char const *argv[])
   GLuint diffuse_map;
   if (!_create_texture("resources/textures/container2.png", &diffuse_map))
   {
-    retval = EXIT_FAILURE;
-    goto clean_buffers;
+    return 1;
   }
 
   GLuint specular_map;
   if (!_create_texture("resources/textures/container2_specular.png", &specular_map))
   {
-    retval = EXIT_FAILURE;
-    goto destroy_diffuse_tex;
+    return 1;
   }
 
   shader_use(&cube_shader);
@@ -310,23 +302,7 @@ int main(int argc, char const *argv[])
     glfwPollEvents();
   }
 
-  glDeleteTextures(1, &specular_map);
-destroy_diffuse_tex:
-  glDeleteTextures(1, &diffuse_map);
-clean_buffers:
-  glDeleteVertexArrays(1, &cube_vao);
-  glDeleteVertexArrays(1, &light_cube_vao);
-  glDeleteBuffers(1, &vbo);
-destroy_light_shader:
-  shader_deinit(&light_cube_shader);
-destroy_cube_shader:
-  shader_deinit(&cube_shader);
-destroy:
-  glfwDestroyWindow(window);
-terminate:
-  glfwTerminate();
-
-  return retval;
+  return 0;
 }
 
 static void _error_cb(int error, char const *desc)
