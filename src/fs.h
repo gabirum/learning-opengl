@@ -1,8 +1,6 @@
-#if !defined(_FS_H_)
-#define _FS_H_
+#if !defined(FS_H)
+#define FS_H
 
-#include <stdint.h>
+char *fs_read_as_text(char const *filename);
 
-uint8_t *fs_read_all_file(char const *filename);
-
-#endif // _FS_H_
+#endif // FS_H

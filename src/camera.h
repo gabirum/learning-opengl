@@ -1,10 +1,9 @@
-#if !defined(_CAMERA_H_)
-#define _CAMERA_H_
+#if !defined(CAMERA_H)
+#define CAMERA_H
 
 #include <stdbool.h>
-#include <string.h>
 
-#include <cglm/cglm.h>
+#include <cglm/types.h>
 
 #define DEFAULT_YAW -90.f
 #define DEFAULT_PITCH 0.f
@@ -27,9 +26,9 @@ enum camera_mov_e
 
 typedef struct camera
 {
-  bool constrain_pitch;
   vec3 pos, front, up;
   float yaw, pitch, mov_speed, mouse_sense, zoom;
+  bool constrain_pitch;
 } camera_t;
 
 void cam_init(
@@ -52,14 +51,9 @@ void cam_init(
                                            DEFAULT_ZOOM,  \
                                            camera)
 
-void cam_get_pos(camera_t *camera, vec3 pos);
-void cam_get_front(camera_t *camera, vec3 front);
-bool cam_get_constrain_pitch(camera_t *camera);
-void cam_set_constrain_pitch(camera_t *camera, bool value);
-float cam_get_zoom(camera_t *camera);
 void cam_get_view_matrix(camera_t *camera, mat4 view_matrix);
 void cam_process_scroll(camera_t *camera, float offset);
 void cam_process_key(camera_t *camera, enum camera_mov_e direction, float frame_time);
 void cam_process_mouse(camera_t *camera, float xoff, float yoff);
 
-#endif // _CAMERA_H_
+#endif // CAMERA_H

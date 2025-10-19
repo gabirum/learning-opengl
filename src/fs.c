@@ -3,11 +3,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-uint8_t *fs_read_all_file(char const *filename)
+char *fs_read_as_text(char const *filename)
 {
-  FILE *file = fopen(filename, "rb");
-  if (file == NULL)
+  FILE *file = fopen(filename, "r");
+  if (!file)
   {
+    perror("Cannot read file");
     return NULL;
   }
 
@@ -15,13 +16,14 @@ uint8_t *fs_read_all_file(char const *filename)
   long size = ftell(file);
   rewind(file);
 
-  uint8_t *data = calloc(size + 1, 1);
-  if (data != NULL)
+  char *buffer = malloc(size);
+  if (buffer)
   {
-    fread(data, 1, size, file);
+    size_t read = fread(buffer, 1, size, file);
+    buffer[read] = 0;
   }
 
   fclose(file);
 
-  return data;
+  return buffer;
 }

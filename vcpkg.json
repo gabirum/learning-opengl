@@ -2,6 +2,7 @@
   "dependencies": [
     "cglm",
     "glfw3",
-    "stb"
+    "stb",
+    "assimp"
   ]
 }

@@ -164,17 +164,19 @@ int main(int argc, char const *argv[])
       DEFAULT_SENSE,
       DEFAULT_ZOOM,
       &camera);
-  cam_set_constrain_pitch(&camera, true);
+  camera.constrain_pitch = true;
 
   shader_t cube_shader;
   if (!shader_init("resources/shaders/cube.vert", "resources/shaders/cube.frag", &cube_shader))
   {
+    fputs("Cannot load cube shaders\n", stderr);
     return 1;
   }
 
   shader_t light_cube_shader;
   if (!shader_init("resources/shaders/light.vert", "resources/shaders/light.frag", &light_cube_shader))
   {
+    fputs("Cannot load light shaders\n", stderr);
     return 1;
   }
 
@@ -205,12 +207,14 @@ int main(int argc, char const *argv[])
   GLuint diffuse_map;
   if (!_create_texture("resources/textures/container2.png", &diffuse_map))
   {
+    fputs("Cannot create texture container\n", stderr);
     return 1;
   }
 
   GLuint specular_map;
   if (!_create_texture("resources/textures/container2_specular.png", &specular_map))
   {
+    fputs("Cannot create texture container specular\n", stderr);
     return 1;
   }
 
@@ -257,7 +261,7 @@ int main(int argc, char const *argv[])
     shader_set_float(&cube_shader, "spotLight.outerCutOff", cosf(glm_rad(15.f)));
 
     mat4 projection;
-    glm_perspective(glm_rad(cam_get_zoom(&camera)), ((float)screen_width) / ((float)screen_height), .1f, 100.f, projection);
+    glm_perspective(glm_rad(camera.zoom), ((float)screen_width) / ((float)screen_height), .1f, 100.f, projection);
     shader_set_mat4(&cube_shader, "projection", projection);
 
     mat4 view;

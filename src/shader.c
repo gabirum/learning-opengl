@@ -5,14 +5,12 @@
 
 #include "fs.h"
 
-#define LOG_ERR(format, ...) fprintf(stderr, "error @ %s:%d: " format "\n", __FILE__, __LINE__, ##__VA_ARGS__)
-
 static bool _compile_shader(char const *filename, GLenum shader_type, GLuint *shader)
 {
-  uint8_t *shader_source = fs_read_all_file(filename);
+  char *shader_source = fs_read_as_text(filename);
   if (shader_source == NULL)
   {
-    LOG_ERR("cannot open file: %s", filename);
+    fputs("Cannot read file\n", stderr);
     return false;
   }
 
@@ -26,8 +24,8 @@ static bool _compile_shader(char const *filename, GLenum shader_type, GLuint *sh
   if (!success)
   {
     char log[512];
-    glGetShaderInfoLog(new_shader, 512, NULL, log);
-    LOG_ERR("SHADER COMPILATION ERROR (%u): %s", shader_type, log);
+    glGetShaderInfoLog(new_shader, sizeof(log), NULL, log);
+    fprintf(stderr, "SHADER COMPILATION ERROR (%u): %s\n", shader_type, log);
 
     glDeleteShader(new_shader);
     return false;
@@ -50,7 +48,7 @@ static bool _compile_program(GLuint vertex, GLuint frag, GLuint *program)
   {
     char log[512];
     glGetProgramInfoLog(new_program, 512, NULL, log);
-    LOG_ERR("SHADER LINKING ERROR: %s", log);
+    fprintf(stderr, "SHADER LINKING ERROR: %s\n", log);
 
     glDeleteProgram(new_program);
     return false;
@@ -65,11 +63,13 @@ bool shader_init(char const *vertex_path, char const *frag_path, shader_t *shade
   GLuint vertex, frag;
   if (!_compile_shader(vertex_path, GL_VERTEX_SHADER, &vertex))
   {
+    fprintf(stderr, "Cannot compile shader %s\n", frag_path);
     return false;
   }
 
   if (!_compile_shader(frag_path, GL_FRAGMENT_SHADER, &frag))
   {
+    fprintf(stderr, "Cannot compile shader %s\n", frag_path);
     glDeleteShader(vertex);
     return false;
   }
@@ -79,6 +79,7 @@ bool shader_init(char const *vertex_path, char const *frag_path, shader_t *shade
   glDeleteShader(frag);
   if (!result)
   {
+    fputs("Cannot compile shader program", stderr);
     return false;
   }
 
